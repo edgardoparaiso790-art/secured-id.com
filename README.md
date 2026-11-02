@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 
 const style = `
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+  @import url('https://secured-id.com);
   * { margin:0; padding:0; box-sizing:border-box; }
   :root { --gold:#c9a84c; --gold-light:#f0d080; --gold-dark:#7a5c1a; --navy:#060c1a; --navy2:#0a1428; --navy3:#0e1e3a; --cyan:#00d4ff; --cyan-dim:#007a9a; --white:#f0f4ff; --muted:#4a6080; }
   html { scroll-behavior: smooth; }
