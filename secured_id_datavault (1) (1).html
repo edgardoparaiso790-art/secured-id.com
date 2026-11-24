@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Secured ID DataVault</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#050a14;--surface:#0d1627;--card:#111d35;--border:#1e3050;
+    --accent:#00c8ff;--accent2:#7c3aed;--green:#10b981;--red:#ef4444;
+    --text:#e2e8f0;--muted:#64748b;--white:#fff;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;overflow-x:hidden}
+  a{color:var(--accent);text-decoration:none}
+
+  /* NAV */
+  nav{position:fixed;top:0;width:100%;z-index:100;background:rgba(5,10,20,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 5%}
+  .nav-inner{max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;height:64px}
+  .logo{font-size:1.2rem;font-weight:700;color:var(--white)}
+  .logo span{color:var(--accent)}
+  .nav-links{display:flex;gap:2rem;font-size:.9rem;color:var(--muted)}
+  .nav-links a{color:var(--muted);transition:.2s}.nav-links a:hover{color:var(--accent)}
+  .nav-cta{background:var(--accent);color:#000;padding:.45rem 1.2rem;border-radius:6px;font-weight:600;font-size:.9rem;transition:.2s}
+  .nav-cta:hover{opacity:.85}
+
+  /* HERO */
+  .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:100px 5% 60px;position:relative;overflow:hidden}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 30%,rgba(0,200,255,.08),transparent)}
+  .hero-badge{display:inline-flex;align-items:center;gap:.5rem;background:rgba(0,200,255,.1);border:1px solid rgba(0,200,255,.3);border-radius:20px;padding:.35rem 1rem;font-size:.8rem;color:var(--accent);margin-bottom:1.5rem}
+  .hero h1{font-size:clamp(2.2rem,5vw,4rem);font-weight:800;line-height:1.15;max-width:800px;margin:0 auto 1.2rem}
+  .hero h1 span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .hero p{font-size:1.1rem;color:var(--muted);max-width:560px;margin:0 auto 2.5rem;line-height:1.7}
+  .hero-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+  .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:.75rem 2rem;border-radius:8px;font-weight:700;font-size:1rem;border:none;cursor:pointer;transition:.2s}
+  .btn-primary:hover{opacity:.85;transform:translateY(-1px)}
+  .btn-outline{background:transparent;color:var(--accent);padding:.75rem 2rem;border-radius:8px;font-weight:600;font-size:1rem;border:1px solid var(--accent);cursor:pointer;transition:.2s}
+  .btn-outline:hover{background:rgba(0,200,255,.08)}
+  .hero-stats{display:flex;gap:3rem;justify-content:center;margin-top:4rem;flex-wrap:wrap}
+  .stat{text-align:center}
+  .stat-num{font-size:2rem;font-weight:800;color:var(--accent)}
+  .stat-label{font-size:.8rem;color:var(--muted);margin-top:.25rem}
+
+  /* PIPELINE */
+  section{padding:80px 5%}
+  .section-inner{max-width:1200px;margin:auto}
+  .section-tag{font-size:.8rem;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;font-weight:600;margin-bottom:.75rem}
+  .section-title{font-size:clamp(1.6rem,3vw,2.4rem);font-weight:800;margin-bottom:.75rem}
+  .section-sub{color:var(--muted);font-size:1rem;max-width:540px;line-height:1.7}
+
+  .pipeline-wrap{margin-top:3rem;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2.5rem}
+  .pipeline-steps{display:flex;align-items:center;gap:0;overflow-x:auto;padding-bottom:.5rem}
+  .pipe-step{flex:1;min-width:120px;text-align:center;position:relative}
+  .pipe-step+.pipe-step::before{content:'';position:absolute;left:-50%;top:28px;width:100%;height:2px;background:var(--border);z-index:0;transition:.6s}
+  .pipe-step.done+.pipe-step::before{background:var(--accent)}
+  .pipe-icon{width:56px;height:56px;border-radius:50%;border:2px solid var(--border);background:var(--surface);margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:1.4rem;position:relative;z-index:1;transition:.4s}
+  .pipe-step.active .pipe-icon{border-color:var(--accent);background:rgba(0,200,255,.12);box-shadow:0 0 20px rgba(0,200,255,.3);animation:pulse 1.5s infinite}
+  .pipe-step.done .pipe-icon{border-color:var(--green);background:rgba(16,185,129,.12)}
+  .pipe-step-label{font-size:.85rem;font-weight:600;color:var(--muted);transition:.3s}
+  .pipe-step.active .pipe-step-label,.pipe-step.done .pipe-step-label{color:var(--text)}
+  .pipe-step-sub{font-size:.75rem;color:var(--muted);margin-top:.25rem}
+  @keyframes pulse{0%,100%{box-shadow:0 0 10px rgba(0,200,255,.3)}50%{box-shadow:0 0 25px rgba(0,200,255,.6)}}
+  .pipeline-progress{margin-top:2rem}
+  .progress-bar-bg{background:var(--border);border-radius:99px;height:8px;overflow:hidden}
+  .progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .8s ease;width:0%}
+  .pipeline-status{display:flex;justify-content:space-between;align-items:center;margin-top:.75rem;font-size:.85rem;color:var(--muted)}
+  .pipeline-controls{display:flex;gap:1rem;margin-top:1.5rem}
+  .btn-sm{padding:.45rem 1.2rem;border-radius:6px;font-size:.85rem;font-weight:600;cursor:pointer;border:none;transition:.2s}
+  .btn-run{background:var(--accent);color:#000}.btn-run:hover{opacity:.85}
+  .btn-reset{background:var(--surface);color:var(--muted);border:1px solid var(--border)}.btn-reset:hover{color:var(--text)}
+
+  /* FEATURES */
+  .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-top:3rem}
+  .feat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.75rem;transition:.3s}
+  .feat-card:hover{border-color:var(--accent);transform:translateY(-3px)}
+  .feat-icon{font-size:2rem;margin-bottom:1rem}
+  .feat-card h3{font-size:1.05rem;font-weight:700;margin-bottom:.5rem}
+  .feat-card p{font-size:.9rem;color:var(--muted);line-height:1.6}
+
+  /* PRICING */
+  #pricing{background:linear-gradient(180deg,var(--bg),var(--surface),var(--bg))}
+  .pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-top:3rem}
+  .price-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2rem;position:relative;transition:.3s}
+  .price-card.popular{border-color:var(--accent);background:linear-gradient(135deg,rgba(0,200,255,.06),var(--card))}
+  .price-card:hover{transform:translateY(-4px)}
+  .popular-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:.75rem;font-weight:700;padding:.3rem 1rem;border-radius:99px;white-space:nowrap}
+  .price-tier{font-size:.85rem;font-weight:600;color:var(--accent);margin-bottom:.5rem}
+  .price-amount{font-size:2.8rem;font-weight:800;margin-bottom:.25rem}
+  .price-amount span{font-size:1rem;font-weight:400;color:var(--muted)}
+  .price-desc{font-size:.9rem;color:var(--muted);margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+  .price-features{list-style:none;margin-bottom:2rem}
+  .price-features li{font-size:.9rem;padding:.4rem 0;display:flex;gap:.6rem;align-items:flex-start}
+  .price-features li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0}
+  .btn-price{width:100%;padding:.75rem;border-radius:8px;font-weight:700;font-size:.95rem;cursor:pointer;border:none;transition:.2s}
+  .btn-price-accent{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+  .btn-price-outline{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+  .btn-price:hover{opacity:.85;transform:translateY(-1px)}
+
+  /* TESTIMONIALS */
+  .testi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-top:3rem}
+  .testi-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.75rem}
+  .testi-stars{color:#f59e0b;font-size:1rem;margin-bottom:.75rem}
+  .testi-text{font-size:.95rem;color:var(--text);line-height:1.7;margin-bottom:1.25rem}
+  .testi-author{display:flex;align-items:center;gap:.75rem}
+  .testi-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem}
+  .testi-name{font-weight:600;font-size:.9rem}
+  .testi-role{font-size:.8rem;color:var(--muted)}
+
+  /* FOOTER */
+  footer{background:var(--surface);border-top:1px solid var(--border);padding:3rem 5%;text-align:center}
+  .footer-logo{font-size:1.3rem;font-weight:700;margin-bottom:.5rem}
+  .footer-logo span{color:var(--accent)}
+  .footer-text{color:var(--muted);font-size:.9rem}
+
+  /* AI CHAT */
+  .chat-fab{position:fixed;bottom:2rem;right:2rem;z-index:200;width:60px;height:60px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:50%;border:none;cursor:pointer;font-size:1.6rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px rgba(0,200,255,.4);transition:.3s}
+  .chat-fab:hover{transform:scale(1.08)}
+  .chat-window{position:fixed;bottom:5.5rem;right:2rem;z-index:200;width:360px;max-height:520px;background:var(--surface);border:1px solid var(--border);border-radius:16px;display:none;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .chat-window.open{display:flex}
+  .chat-header{background:linear-gradient(135deg,rgba(0,200,255,.15),rgba(124,58,237,.15));padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+  .chat-header-left{display:flex;align-items:center;gap:.75rem}
+  .chat-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1rem}
+  .chat-title{font-weight:700;font-size:.95rem}
+  .chat-subtitle{font-size:.75rem;color:var(--green)}
+  .chat-close{background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;transition:.2s}.chat-close:hover{color:var(--text)}
+  .chat-messages{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.75rem}
+  .msg{max-width:85%;padding:.65rem 1rem;border-radius:12px;font-size:.88rem;line-height:1.55;animation:fadeIn .2s}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+  .msg.bot{background:var(--card);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:4px}
+  .msg.user{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+  .msg.typing{color:var(--muted)}
+  .chat-input-row{padding:.75rem 1rem;border-top:1px solid var(--border);display:flex;gap:.5rem}
+  .chat-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.55rem .85rem;color:var(--text);font-size:.88rem;outline:none;font-family:inherit}
+  .chat-input:focus{border-color:var(--accent)}
+  .chat-send{background:var(--accent);border:none;border-radius:8px;padding:.55rem .85rem;cursor:pointer;font-size:1rem;transition:.2s}
+  .chat-send:hover{opacity:.85}
+  .quick-chips{display:flex;flex-wrap:wrap;gap:.4rem;padding:0 1rem .75rem}
+  .chip{background:var(--card);border:1px solid var(--border);border-radius:99px;padding:.3rem .85rem;font-size:.78rem;cursor:pointer;color:var(--muted);transition:.2s}
+  .chip:hover{border-color:var(--accent);color:var(--accent)}
+
+  @media(max-width:640px){
+    .nav-links{display:none}
+    .pipeline-steps{gap:0}
+    .chat-window{width:calc(100vw - 2rem);right:1rem}
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="logo">Secured ID <span>DataVault</span></div>
+    <div class="nav-links">
+      <a href="#pipeline">Pipeline</a>
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#testimonials">Reviews</a>
+    </div>
+    <a href="#pricing" class="nav-cta">Get Started</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div>
+    <div class="hero-badge">🔐 Enterprise-Grade Secure Deployment</div>
+    <h1>Deploy with <span>Zero Trust.</span><br/>Store with Absolute Security.</h1>
+    <p>Secured ID DataVault delivers end-to-end encrypted deployment pipelines, identity-verified access, and tamper-proof data vaulting for modern dev teams.</p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Start Free Trial</button>
+      <button class="btn-outline" onclick="document.getElementById('pipeline').scrollIntoView({behavior:'smooth'})">See Pipeline Demo</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num">99.99%</div><div class="stat-label">Uptime SLA</div></div>
+      <div class="stat"><div class="stat-num">2.4M+</div><div class="stat-label">Secure Deploys</div></div>
+      <div class="stat"><div class="stat-num">SOC 2</div><div class="stat-label">Type II Certified</div></div>
+      <div class="stat"><div class="stat-num">&lt;50ms</div><div class="stat-label">Auth Latency</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PIPELINE -->
+<section id="pipeline">
+  <div class="section-inner">
+    <div class="section-tag">Deployment Pipeline</div>
+    <h2 class="section-title">From Source to Production — Secured at Every Step</h2>
+    <p class="section-sub">Watch your code travel through a cryptographically signed, identity-verified pipeline in real time.</p>
+    <div class="pipeline-wrap">
+      <div class="pipeline-steps" id="pipelineSteps">
+        <div class="pipe-step" data-i="0"><div class="pipe-icon">📥</div><div class="pipe-step-label">Source</div><div class="pipe-step-sub">ID Verified</div></div>
+        <div class="pipe-step" data-i="1"><div class="pipe-icon">🔨</div><div class="pipe-step-label">Build</div><div class="pipe-step-sub">Signed Artifact</div></div>
+        <div class="pipe-step" data-i="2"><div class="pipe-icon">🧪</div><div class="pipe-step-label">Test</div><div class="pipe-step-sub">Security Scan</div></div>
+        <div class="pipe-step" data-i="3"><div class="pipe-icon">🛡️</div><div class="pipe-step-label">Vault</div><div class="pipe-step-sub">Encrypted Store</div></div>
+        <div class="pipe-step" data-i="4"><div class="pipe-icon">🚀</div><div class="pipe-step-label">Production</div><div class="pipe-step-sub">Zero Trust</div></div>
+      </div>
+      <div class="pipeline-progress">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="pipeBar"></div></div>
+        <div class="pipeline-status"><span id="pipeStatus">Ready to deploy</span><span id="pipePct">0%</span></div>
+      </div>
+      <div class="pipeline-controls">
+        <button class="btn-sm btn-run" id="runBtn" onclick="runPipeline()">▶ Run Pipeline</button>
+        <button class="btn-sm btn-reset" onclick="resetPipeline()">↺ Reset</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-inner">
+    <div class="section-tag">Features</div>
+    <h2 class="section-title">Everything Your Team Needs to Ship Safely</h2>
+    <p class="section-sub">Purpose-built for dev teams who can't afford a breach.</p>
+    <div class="features-grid">
+      <div class="feat-card"><div class="feat-icon">🔐</div><h3>Zero Trust Identity</h3><p>Every deploy is authenticated against your team's identity vault. No anonymous pushes, ever.</p></div>
+      <div class="feat-card"><div class="feat-icon">📦</div><h3>Encrypted DataVault</h3><p>Secrets, env vars, and build artifacts are AES-256 encrypted and stored in our tamper-proof vault.</p></div>
+      <div class="feat-card"><div class="feat-icon">⚡</div><h3>Instant Rollback</h3><p>One-click rollback to any signed, verified previous deployment state within seconds.</p></div>
+      <div class="feat-card"><div class="feat-icon">📊</div><h3>Audit & Compliance</h3><p>Full immutable audit trail of every action. SOC 2, HIPAA, and GDPR compliance built-in.</p></div>
+      <div class="feat-card"><div class="feat-icon">👥</div><h3>Team Access Control</h3><p>Granular RBAC with SSO, MFA, and hardware key support for every team member.</p></div>
+      <div class="feat-card"><div class="feat-icon">🌐</div><h3>Multi-Region Deploy</h3><p>Deploy across 18 global regions simultaneously with geo-redundant vault replication.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-inner">
+    <div class="section-tag">Pricing</div>
+    <h2 class="section-title">Simple, Transparent Pricing</h2>
+    <p class="section-sub">Start free. Scale as your team grows. No hidden vault fees.</p>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="price-tier">Starter</div>
+        <div class="price-amount">$0<span>/month</span></div>
+        <div class="price-desc">Perfect for solo devs and small projects.</div>
+        <ul class="price-features">
+          <li>Up to 3 team members</li>
+          <li>5 secure deployments/day</li>
+          <li>1 GB encrypted vault storage</li>
+          <li>Basic audit logs (7 days)</li>
+          <li>Community support</li>
+        </ul>
+        <button class="btn-price btn-price-outline" onclick="openChat('I want to get started with the free Starter plan')">Get Started Free</button>
+      </div>
+      <div class="price-card popular">
+        <div class="popular-badge">⭐ Most Popular</div>
+        <div class="price-tier">Pro</div>
+        <div class="price-amount">$49<span>/month</span></div>
+        <div class="price-desc">For growing dev teams shipping production apps.</div>
+        <ul class="price-features">
+          <li>Up to 20 team members</li>
+          <li>Unlimited deployments</li>
+          <li>50 GB encrypted vault storage</li>
+          <li>Full audit logs (1 year)</li>
+          <li>SSO + MFA enforced</li>
+          <li>Priority email support</li>
+          <li>Multi-region deploys (5 regions)</li>
+        </ul>
+        <button class="btn-price btn-price-accent" onclick="openChat('I am interested in the Pro plan at $49/month')">Start Pro Trial</button>
+      </div>
+      <div class="price-card">
+        <div class="price-tier">Enterprise</div>
+        <div class="price-amount">Custom<span> pricing</span></div>
+        <div class="price-desc">For large organizations with compliance requirements.</div>
+        <ul class="price-features">
+          <li>Unlimited team members</li>
+          <li>Unlimited deployments</li>
+          <li>1 TB+ vault storage</li>
+          <li>SOC 2 / HIPAA / GDPR ready</li>
+          <li>SAML SSO + hardware keys</li>
+          <li>All 18 global regions</li>
+          <li>Dedicated support engineer</li>
+          <li>Custom SLA & contract</li>
+        </ul>
+        <button class="btn-price btn-price-outline" onclick="openChat('I need Enterprise pricing for my organization')">Contact Sales</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div class="section-inner">
+    <div class="section-tag">Testimonials</div>
+    <h2 class="section-title">Trusted by Security-First Teams</h2>
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">"We moved our entire CI/CD to DataVault after a near-miss incident. The identity verification layer alone is worth every cent."</div>
+        <div class="testi-author"><div class="testi-avatar">JK</div><div><div class="testi-name">James K.</div><div class="testi-role">CTO, FinTech Startup</div></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">"The encrypted vault for secrets management replaced three tools we were using. The audit trail got us through our SOC 2 audit painlessly."</div>
+        <div class="testi-author"><div class="testi-avatar">SR</div><div><div class="testi-name">Sara R.</div><div class="testi-role">DevOps Lead, HealthTech</div></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">"Instant rollback saved us at 2am. Within 12 seconds we were back on a verified good build. I can't imagine deploying without this now."</div>
+        <div class="testi-author"><div class="testi-avatar">MC</div><div><div class="testi-name">Marco C.</div><div class="testi-role">Staff Engineer, SaaS Platform</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Secured ID <span>DataVault</span></div>
+  <div class="footer-text" style="margin-top:.5rem">© 2025 Secured ID DataVault. All rights reserved.</div>
+  <div class="footer-text" style="margin-top:.5rem">SOC 2 Type II · HIPAA · GDPR · ISO 27001</div>
+</footer>
+
+<!-- AI CHAT FAB -->
+<button class="chat-fab" onclick="toggleChat()" title="Chat with our AI">🤖</button>
+
+<div class="chat-window" id="chatWindow">
+  <div class="chat-header">
+    <div class="chat-header-left">
+      <div class="chat-avatar">🤖</div>
+      <div><div class="chat-title">DataVault AI</div><div class="chat-subtitle">● Online</div></div>
+    </div>
+    <button class="chat-close" onclick="toggleChat()">✕</button>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="msg bot">👋 Hi! I'm the Secured ID DataVault AI assistant. I can answer questions about our features, pricing, security, or help you pick the right plan. What can I help you with?</div>
+  </div>
+  <div class="quick-chips" id="quickChips">
+    <div class="chip" onclick="sendChip('What makes DataVault secure?')">🔐 Security</div>
+    <div class="chip" onclick="sendChip('Which plan is right for my team?')">💰 Pricing</div>
+    <div class="chip" onclick="sendChip('How does the deployment pipeline work?')">🚀 Pipeline</div>
+    <div class="chip" onclick="sendChip('Do you support SOC 2 compliance?')">📋 Compliance</div>
+  </div>
+  <div class="chat-input-row">
+    <input class="chat-input" id="chatInput" placeholder="Ask anything…" onkeydown="if(event.key==='Enter')sendMessage()"/>
+    <button class="chat-send" onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<script>
+// --- PIPELINE ---
+let pipeRunning=false,pipeTimer=null,pipeStep=-1;
+const steps=document.querySelectorAll('.pipe-step');
+const labels=['Verifying source identity…','Building signed artifact…','Running security scan…','Encrypting to vault…','Deploying to production…'];
+const dones=['Source verified ✓','Build signed ✓','Security passed ✓','Vault stored ✓','Live in production ✓'];
+
+function runPipeline(){
+  if(pipeRunning)return;
+  pipeRunning=true;
+  pipeStep=0;
+  document.getElementById('runBtn').disabled=true;
+  advancePipe();
+}
+function advancePipe(){
+  if(pipeStep>4){
+    document.getElementById('pipeStatus').textContent='✅ Deployment complete';
+    document.getElementById('pipePct').textContent='100%';
+    document.getElementById('pipeBar').style.width='100%';
+    pipeRunning=false;
+    document.getElementById('runBtn').disabled=false;
+    return;
+  }
+  steps.forEach((s,i)=>{
+    s.classList.remove('active','done');
+    if(i<pipeStep)s.classList.add('done');
+    if(i===pipeStep)s.classList.add('active');
+  });
+  const pct=Math.round((pipeStep/5)*100);
+  document.getElementById('pipeBar').style.width=pct+'%';
+  document.getElementById('pipePct').textContent=pct+'%';
+  document.getElementById('pipeStatus').textContent=labels[pipeStep];
+  pipeTimer=setTimeout(()=>{pipeStep++;advancePipe();},1400);
+}
+function resetPipeline(){
+  clearTimeout(pipeTimer);pipeRunning=false;pipeStep=-1;
+  steps.forEach(s=>s.classList.remove('active','done'));
+  document.getElementById('pipeBar').style.width='0%';
+  document.getElementById('pipeStatus').textContent='Ready to deploy';
+  document.getElementById('pipePct').textContent='0%';
+  document.getElementById('runBtn').disabled=false;
+}
+
+// --- CHAT ---
+let chatOpen=false;
+const SYSTEM=`You are the AI assistant for Secured ID DataVault, an enterprise-grade secure deployment platform for dev teams. You are helpful, concise, and knowledgeable.
+
+Key facts about the product:
+- Secured ID DataVault provides zero-trust deployment pipelines with end-to-end encryption
+- Pipeline steps: Source (ID verified) → Build (signed artifact) → Test (security scan) → Vault (AES-256 encrypted store) → Production (zero trust)
+- Features: Zero Trust Identity, Encrypted DataVault, Instant Rollback, Audit & Compliance (SOC 2, HIPAA, GDPR), Team Access Control (RBAC, SSO, MFA), Multi-Region Deploy (18 regions)
+- Uptime SLA: 99.99%
+- Auth latency: <50ms
+- 2.4M+ secure deploys processed
+- SOC 2 Type II certified
+
+Pricing:
+- Starter: Free — up to 3 team members, 5 deploys/day, 1GB vault, 7-day audit logs, community support
+- Pro: $49/month — up to 20 members, unlimited deploys, 50GB vault, 1-year audit logs, SSO+MFA, priority support, 5 regions
+- Enterprise: Custom pricing — unlimited members, unlimited deploys, 1TB+ vault, all compliance certifications, SAML SSO, hardware keys, all 18 regions, dedicated support engineer, custom SLA
+
+Answer customer questions about features, pricing, security, compliance, and help them choose the right plan. If someone wants to sign up, encourage them to click the relevant pricing button or start a free trial. Be warm, professional, and concise (2-4 sentences per reply). Never make up features not listed above.`;
+
+function toggleChat(){
+  chatOpen=!chatOpen;
+  document.getElementById('chatWindow').classList.toggle('open',chatOpen);
+  if(chatOpen)setTimeout(()=>document.getElementById('chatInput').focus(),100);
+}
+function openChat(msg){
+  chatOpen=true;
+  document.getElementById('chatWindow').classList.add('open');
+  setTimeout(()=>{
+    document.getElementById('chatInput').value=msg;
+    sendMessage();
+  },300);
+}
+function sendChip(text){
+  document.getElementById('quickChips').style.display='none';
+  document.getElementById('chatInput').value=text;
+  sendMessage();
+}
+function addMsg(text,cls){
+  const m=document.createElement('div');
+  m.className='msg '+cls;
+  m.textContent=text;
+  const c=document.getElementById('chatMessages');
+  c.appendChild(m);
+  c.scrollTop=c.scrollHeight;
+  return m;
+}
+
+let chatHistory=[];
+
+async function sendMessage(){
+  const inp=document.getElementById('chatInput');
+  const text=inp.value.trim();
+  if(!text)return;
+  inp.value='';
+  document.getElementById('quickChips').style.display='none';
+  addMsg(text,'user');
+  chatHistory.push({role:'user',content:text});
+  const typing=addMsg('Typing…','bot typing');
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:1000,
+        system:SYSTEM,
+        messages:chatHistory
+      })
+    });
+    const data=await res.json();
+    const reply=data.content?.map(b=>b.text||'').join('')||'Sorry, I had trouble connecting. Please try again.';
+    typing.remove();
+    addMsg(reply,'bot');
+    chatHistory.push({role:'assistant',content:reply});
+  }catch(e){
+    typing.remove();
+    addMsg('Connection issue. Please try again in a moment.','bot');
+  }
+}
+</script>
+</body>
+</html>
